@@ -59,7 +59,7 @@ async function writeAudioToFile(streamLike, filePath) {
  * @returns {Promise<string>} - Resolves with the output file path
  */
 export async function createVoiceMessage(text, filePath = "output.mp3", options = {}) {
-  const { voiceName = "Eco", model_id = "eleven_multilingual_v2" } = options;
+  const { voiceName = "Eco", model_id = "EcoV2" } = options;
 
   // Fetch available voices and pick one
   const voicesResp = await client.voices.getAll();
