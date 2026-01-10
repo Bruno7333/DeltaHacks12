@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Voice Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>Create Voice Message</h1>
+      <textarea id="text" placeholder="Enter text to speak" rows="6"></textarea>
+      <div class="controls">
+        <button id="speak">Generate & Play</button>
+      </div>
+      <div id="player" class="hidden">
+        <audio id="audio" controls></audio>
+      </div>
+      <div id="status"></div>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
