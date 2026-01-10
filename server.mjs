@@ -35,8 +35,8 @@ app.post('/speak', async (req, res) => {
     }
 
     const outFile = `voice_${Date.now()}.mp3`;
-    // Use explicit custom voiceId to ensure the custom voice is used
-    await createVoiceMessage(text, outFile, { voiceId: 'tQkv9ulgQzDoPFvGQ3yb' });
+    // Use default voice (no custom voiceId passed)
+    await createVoiceMessage(text, outFile);
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.sendFile(path.resolve(outFile), (err) => {

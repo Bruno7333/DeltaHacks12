@@ -59,15 +59,20 @@ async function writeAudioToFile(streamLike, filePath) {
  * @returns {Promise<string>} - Resolves with the output file path
  */
 export async function createVoiceMessage(text, filePath = "output.mp3", options = {}) {
-  const { voiceId: optVoiceId, voiceName = "EcoV2", model_id = "tQkv9ulgQzDoPFvGQ3yb" } = options;
+  const { voiceId: optVoiceId, voiceName, model_id = "eleven_multilingual_v2" } = options;
 
-  // Prefer explicit voiceId, otherwise try to resolve by name or use first available
+  // Prefer explicit voiceId, otherwise try to resolve by name or use first available voice
   let voiceId = optVoiceId;
   if (!voiceId) {
     const voicesResp = await client.voices.getAll();
     const voices = voicesResp && voicesResp.voices ? voicesResp.voices : [];
-    const found = voices.find((v) => v.name === voiceName);
-    voiceId = (found && found.voice_id) || (voices[0] && voices[0].voice_id);
+    if (voiceName) {
+      const found = voices.find((v) => v.name === voiceName);
+      voiceId = found && found.voice_id;
+    }
+    if (!voiceId && voices[0]) {
+      voiceId = voices[0].voice_id;
+    }
   }
 
   if (!voiceId) {
@@ -76,60 +81,9 @@ export async function createVoiceMessage(text, filePath = "output.mp3", options 
 
   console.log("Using voice id:", voiceId, "model:", model_id);
 
-  async function tryConvert(voiceIdToUse, model) {
-    try {
-      return await client.textToSpeech.convert(voiceIdToUse, { text, model_id: model });
-    } catch (err) {
-      // attempt to extract readable error body if present for better messages
-      if (err && err.body) {
-        try {
-          if (typeof err.body.pipe === 'function') {
-            const chunks = [];
-            for await (const chunk of err.body) chunks.push(Buffer.from(chunk));
-            err._bodyText = Buffer.concat(chunks).toString('utf8');
-          } else if (typeof err.body.arrayBuffer === 'function') {
-            const ab = await err.body.arrayBuffer();
-            err._bodyText = Buffer.from(ab).toString('utf8');
-          } else if (typeof err.body.getReader === 'function') {
-            const reader = err.body.getReader();
-            const chunks = [];
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              chunks.push(Buffer.from(value));
-            }
-            err._bodyText = Buffer.concat(chunks).toString('utf8');
-          }
-        } catch (e) {
-          // ignore body-read errors
-        }
-      }
-      throw err;
-    }
-  }
-
-  // First attempt with provided/default model
-  try {
-    const audioStream = await tryConvert(voiceId, model_id);
-    await writeAudioToFile(audioStream, filePath);
-    return filePath;
-  } catch (err) {
-    const status = err && err.statusCode ? err.statusCode : null;
-    const bodyText = err && err._bodyText ? err._bodyText : null;
-    if (status === 400 && model_id === 'tQkv9ulgQzDoPFvGQ3yb' /* EcoV2 */) {
-      console.warn('Model EcoV2 returned 400; retrying with eleven_multilingual_v2');
-      const fallback = 'eleven_multilingual_v2';
-      const audioStream = await tryConvert(voiceId, fallback);
-      await writeAudioToFile(audioStream, filePath);
-      return filePath;
-    }
-    const msgParts = [err && err.message ? err.message : String(err)];
-    if (bodyText) msgParts.push('\nBody: ' + bodyText);
-    const message = msgParts.join(' ');
-    const e = new Error(message);
-    e.original = err;
-    throw e;
-  }
+  const audioStream = await client.textToSpeech.convert(voiceId, { text, model_id });
+  await writeAudioToFile(audioStream, filePath);
+  return filePath;
 }
 
 // CLI/demo when run directly
