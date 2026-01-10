@@ -14,10 +14,25 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+function maskedKey(key) {
+  if (!key) return null;
+  return key.length > 8 ? `${key.slice(0,4)}...${key.slice(-4)}` : '****';
+}
+
+if (!process.env.ELEVENLABS_API_KEY) {
+  console.warn('Warning: ELEVENLABS_API_KEY is not set. Requests will fail with 401.');
+} else {
+  console.log('Loaded ELEVENLABS_API_KEY:', maskedKey(process.env.ELEVENLABS_API_KEY));
+}
+
 app.post('/speak', async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: 'Missing text' });
+
+    if (!process.env.ELEVENLABS_API_KEY) {
+      return res.status(500).json({ error: 'Server missing ELEVENLABS_API_KEY' });
+    }
 
     const outFile = `voice_${Date.now()}.mp3`;
     // Use explicit custom voiceId to ensure the custom voice is used
