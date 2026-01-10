@@ -16,11 +16,15 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.post('/speak', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, voiceId, model_id } = req.body;
     if (!text) return res.status(400).json({ error: 'Missing text' });
 
     const outFile = `voice_${Date.now()}.mp3`;
-    await createVoiceMessage(text, outFile, { voiceName: 'Eco' });
+    const options = {};
+    if (voiceId) options.voiceId = voiceId;
+    if (model_id) options.model_id = model_id;
+
+    await createVoiceMessage(text, outFile, options);
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.sendFile(path.resolve(outFile), (err) => {

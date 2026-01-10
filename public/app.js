@@ -11,11 +11,16 @@ async function generateAndPlay() {
   player.classList.add('hidden');
 
   try {
-    const resp = await fetch('/speak', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
+      const voiceId = document.getElementById('voiceId')?.value?.trim();
+      const model = document.getElementById('model')?.value?.trim();
+      const body = { text };
+      if (voiceId) body.voiceId = voiceId;
+      if (model) body.model_id = model;
+      const resp = await fetch('/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));

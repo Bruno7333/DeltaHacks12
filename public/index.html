@@ -10,6 +10,10 @@
     <main>
       <h1>Create Voice Message</h1>
       <textarea id="text" placeholder="Enter text to speak" rows="6"></textarea>
+      <label for="voiceId" class="small">Optional voiceId (leave blank for default)</label>
+      <input id="voiceId" placeholder="voiceId (e.g. tQkv9ulgQzDoPFvGQ3yb)" />
+      <label for="model" class="small">Model (optional)</label>
+      <input id="model" placeholder="model_id (e.g. eleven_multilingual_v2)" />
       <div class="controls">
         <button id="speak">Generate & Play</button>
       </div>
