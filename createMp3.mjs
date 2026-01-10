@@ -46,6 +46,31 @@ async function writeAudioToFile(streamLike, filePath) {
   throw new Error('Unsupported audio response type');
 }
 
+// Module-level current voice configuration. Can be changed via `setCurrentVoice`.
+const currentVoice = {
+  voiceId: null,
+  voiceName: null,
+  model_id: 'eleven_multilingual_v2',
+};
+
+/**
+ * Set the module-level current voice.
+ * @param {{voiceId?:string, voiceName?:string, model_id?:string}} cfg
+ */
+export function setCurrentVoice(cfg = {}) {
+  if (cfg.voiceId !== undefined) currentVoice.voiceId = cfg.voiceId || null;
+  if (cfg.voiceName !== undefined) currentVoice.voiceName = cfg.voiceName || null;
+  if (cfg.model_id !== undefined) currentVoice.model_id = cfg.model_id || currentVoice.model_id;
+}
+
+/**
+ * Get the current voice configuration.
+ * @returns {{voiceId:string|null,voiceName:string|null,model_id:string}}
+ */
+export function getCurrentVoice() {
+  return { ...currentVoice };
+}
+
 /**
  * Create an MP3 file from `text` using ElevenLabs API.
  * @param {string} text
@@ -57,15 +82,18 @@ export async function createMp3(text, filename, options = {}) {
   if (!text) throw new Error('text is required');
   if (!filename) throw new Error('filename is required');
   const out = filename.toLowerCase().endsWith('.mp3') ? filename : `${filename}.mp3`;
+  const { voiceId: optVoiceId, voiceName: optVoiceName, model_id: optModel } = options;
 
-  const { voiceId: optVoiceId, voiceName, model_id = 'eleven_multilingual_v2' } = options;
+  const model_id = optModel || currentVoice.model_id || 'eleven_multilingual_v2';
 
-  let voiceId = optVoiceId;
+  let voiceId = optVoiceId || currentVoice.voiceId || null;
+  const voiceName = optVoiceName || currentVoice.voiceName || null;
+
   if (!voiceId) {
     const voicesResp = await client.voices.getAll();
     const voices = voicesResp && voicesResp.voices ? voicesResp.voices : [];
     const found = voiceName ? voices.find((v) => v.name === voiceName) : null;
-    voiceId = (found && found.voice_id) || (voices[0] && voices[0].voice_id);
+    voiceId = (found && found.voice_id) || (voices[0] && voices[0].voice_id) || null;
   }
 
   if (!voiceId) throw new Error('No available voices found in your ElevenLabs account.');
