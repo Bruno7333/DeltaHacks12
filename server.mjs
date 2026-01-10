@@ -20,7 +20,8 @@ app.post('/speak', async (req, res) => {
     if (!text) return res.status(400).json({ error: 'Missing text' });
 
     const outFile = `voice_${Date.now()}.mp3`;
-    await createVoiceMessage(text, outFile, { voiceName: 'Eco' });
+    // Use explicit custom voiceId to ensure the custom voice is used
+    await createVoiceMessage(text, outFile, { voiceId: 'tQkv9ulgQzDoPFvGQ3yb' });
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.sendFile(path.resolve(outFile), (err) => {
